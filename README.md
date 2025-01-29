@@ -13,7 +13,7 @@ This is a HTTP server implemented in C, designed to run on ***Linux*** machines.
 ## Running the server on Linux\
 1. Clone the repository
 ```bash
-git clone https://github.com/andrei-muri/webserverc
+git clone https://github.com/andrei-muri/webserverc.git
 ```
 2. Compile the code
 ```
