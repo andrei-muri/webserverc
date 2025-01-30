@@ -10,7 +10,7 @@ This is a HTTP server implemented in C, designed to run on ***Linux*** machines.
 > [!IMPORTANT]
 > In this version, the server only receives connections from localhost.
 
-## Running the server on Linux\
+## Running the server on Linux
 1. Clone the repository
 ```bash
 git clone https://github.com/andrei-muri/webserverc.git
@@ -35,7 +35,6 @@ http://localhost:8080/
 ## Further development
 - [ ] The user is able to select the port to which the process listens
 - [ ] Implement multithreading to handle multiple simultaneous connections
-- [ ] Improve compatibility for macOS and Windows (replace `sendfile()` with a cross-platform alternative).
 - [ ] Enable connections from the outside
 
 ## Author
