@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/sendfile.h>
+#include <pthread.h>
  
 #define PORT 8080
 
@@ -196,7 +197,35 @@ void sendResponse(httpreq* request, int client_fd ) {
     }
 }
 
+void* handle_client(void* arg) {
+    int client_fd = *(int*)arg;
+    free(arg); 
 
+    char buffer[4096];
+    memset(buffer, 0, sizeof(buffer));
+
+    httpreq* request;
+
+    int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+    if (bytes_received > 0) {
+        request = parseHTTPstring(buffer);
+    } else {
+        perror("Error in receiving data");
+        close(client_fd);
+        return NULL;
+    }
+
+    if (request) {
+        printf("\nReceived HTTP request: %s %s %s\n\n", request->method, request->route, request->mime);
+        sendResponse(request, client_fd);
+        free(request);
+    } else {
+        send(client_fd, fileNotFoundResponse, strlen(fileNotFoundResponse), 0);
+    }
+
+    close(client_fd);
+    return NULL;
+}
 
 int main() {
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0); //IP_v4, TCP connection, IP protocol
@@ -223,41 +252,29 @@ int main() {
     }
 
     while (1) {
-        int client_fd;
+        int *client_fd = malloc(sizeof(int)); 
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         memset(&client_addr, 0, sizeof(client_addr));
 
-        if ((client_fd = accept(socket_fd, (struct sockaddr*) &client_addr, &client_len)) == -1) {
+        *client_fd = accept(socket_fd, (struct sockaddr*) &client_addr, &client_len);
+        if (*client_fd == -1) {
             perror("Error in accepting");
-            exit(-1);
-        } 
+            free(client_fd);
+            continue;
+        }
 
         printf("New client connected from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-
-        //get string request and set httpreq structure
-        char buffer[4096];  // Buffer for receiving request
-        memset(buffer, 0, sizeof(buffer));
-
-        httpreq* request;
-
-        int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-        if (bytes_received > 0) {
-            request = parseHTTPstring(buffer);       
+        // Create a new thread for each client
+        pthread_t thread_id;
+        if (pthread_create(&thread_id, NULL, handle_client, client_fd) != 0) {
+            perror("Error creating thread");
+            free(client_fd);
+            close(*client_fd);
         } else {
-            perror("Error in receiving data");
+            pthread_detach(thread_id); 
         }
-
-        //check valid request
-        if (request) {
-            printf("\nReceived HTTP request: %s %s %s\n\n", request->method, request->route, request->mime);
-            sendResponse(request, client_fd);
-            free(request);
-        } else {
-            send(client_fd, fileNotFoundResponse, strlen(fileNotFoundResponse), 0);
-        }
-
-        close(client_fd);
     }
+
 }

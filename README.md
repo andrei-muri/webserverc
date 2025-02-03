@@ -6,6 +6,7 @@ This is a HTTP server implemented in C, designed to run on ***Linux*** machines.
 - Serves **static files** (*HTML, CSS, JS, PNG, JPG, JPEG, GIF, ICO*) stored in a folder called **html**
 - Supports root route (/ -> */index.html*)
 - A dummy web page that includes html, css, js and a jpg file.
+- Each connection is handled by a thread, thus enabling simultaneous connections
 
 > [!IMPORTANT]
 > In this version, the server only receives connections from localhost.
@@ -17,7 +18,7 @@ git clone https://github.com/andrei-muri/webserverc.git
 ```
 2. Compile the code
 ```
-gcc httpd.c -o httpd
+gcc httpd.c -o httpd -lpthread
 ```
 3. Run the server
 ```
@@ -34,7 +35,6 @@ http://localhost:8080/
 
 ## Further development
 - [ ] The user is able to select the port to which the process listens
-- [ ] Implement multithreading to handle multiple simultaneous connections
 - [ ] Enable connections from the outside
 
 ## Author
